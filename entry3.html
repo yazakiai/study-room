@@ -271,9 +271,6 @@
       updates[`users/${userId}/updatedAt`] = Date.now();
       updates[`users/${userId}/history/${today}`] = true;
 
-      // 通信切断（タブ閉じ・ネットワーク断）時に自動的に「LEFT（退室）」へ更新するよう予約
-      db.ref(`users/${userId}/status`).onDisconnect().set("LEFT");
-
       db.ref().update(updates);
     }
 
