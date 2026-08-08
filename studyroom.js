@@ -115,7 +115,7 @@ function ReceptionDesk({ position = [4.5, 0, 9.8] }) {
         <boxGeometry args={[0.28, 0.2, 0.02]} />
         <meshStandardMaterial color="#1E293B" />
         <mesh position={[0, 0, 0.011]}>
-          <planeGeometry args={[0.26, 0.16]} />
+          <planeGeometry args={[0.26, 0.18]} />
           <meshStandardMaterial color="#E0F2FE" emissive="#0EA5E9" emissiveIntensity={1.2} />
         </mesh>
       </mesh>
@@ -385,6 +385,12 @@ function ActorCharacter({
       if (onPositionUpdate) onPositionUpdate([currentPos.x, currentPos.y, currentPos.z], false, status);
       return;
     }
+
+    let currentWaypoints = [];
+    if (actorState === "APPROACHING_QUEUE") currentWaypoints = [[0, 11.5], [0, 9.5], [3.5, 9.5], [4.5, 8.5]];
+    else if (actorState === "TO_SEAT") currentWaypoints = seatWaypoints;
+    else if (actorState === "TO_EXIT_QUEUE") currentWaypoints = exitWaypoints;
+    else if (actorState === "LEAVING") currentWaypoints = [[4.5, 8.5], [3.5, 9.5], [0, 9.5], [0, 11.5], [0, 18]];
 
     if (currentWaypoints.length === 0) return;
 
@@ -811,7 +817,6 @@ export default function App() {
   const [learners, setLearners] = useState([]);
   const [learnerModes, setLearnerModes] = useState({});
 
-  // 視点切り替え対象の全リスト
   const buttonTargets = useMemo(() => [
     { name: "全体表示 (外から)", target: [0, 0, 5], camPos: [14, 14, 22] },
     { name: "受付カウンター", target: [4.5, 0.5, 9.8], camPos: [8, 6, 16] },
@@ -822,37 +827,7 @@ export default function App() {
     }))
   ], []);
 
-  // 「受付カウンター」を除外した自動切替用ターゲットリスト
-  const autoTargets = useMemo(() => {
-    return buttonTargets.filter((btn) => btn.name !== "受付カウンター");
-  }, [buttonTargets]);
-
-  const [selectedCamIdx, setSelectedCamIdx] = useState(0);
   const [viewTarget, setViewTarget] = useState(buttonTargets[0]);
-
-  // 自動切替のON/OFF状態と巡回インデックス
-  const [isAutoSwitch, setIsAutoSwitch] = useState(false);
-  const autoIndexRef = useRef(0);
-
-  // 5秒おきの自動切り替えタイマー処理（「受付カウンター」を除外して巡回）
-  useEffect(() => {
-    if (!isAutoSwitch) return;
-
-    const interval = setInterval(() => {
-      autoIndexRef.current = (autoIndexRef.current + 1) % autoTargets.length;
-      const nextTarget = autoTargets[autoIndexRef.current];
-
-      // 全体リストにおけるインデックスを検索してドロップダウン選択肢を同期
-      const globalIdx = buttonTargets.findIndex((b) => b.name === nextTarget.name);
-      if (globalIdx !== -1) {
-        setSelectedCamIdx(globalIdx);
-      }
-
-      setViewTarget({ ...nextTarget, trigger: Date.now() });
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isAutoSwitch, autoTargets, buttonTargets]);
 
   // Firebase Realtime Database リアルタイム同期
   useEffect(() => {
@@ -916,7 +891,6 @@ export default function App() {
   const handleCameraChange = (e) => {
     const selectedIndex = parseInt(e.target.value, 10);
     if (!isNaN(selectedIndex) && buttonTargets[selectedIndex]) {
-      setSelectedCamIdx(selectedIndex);
       setViewTarget({ ...buttonTargets[selectedIndex], trigger: Date.now() });
     }
   };
@@ -924,16 +898,15 @@ export default function App() {
   return (
     <div style={{ width: "100vw", height: "100vh", position: "fixed", top: 0, left: 0, background: "#0F172A" }}>
       
-      {/* 上部 コントロールバー (ドロップダウン + 自動切替ボタン) */}
+      {/* 上部 コントロールバー */}
       <div style={{
         position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)", zIndex: 20,
-        display: "flex", alignItems: "center", gap: "10px", background: "rgba(255, 255, 255, 0.95)",
+        display: "flex", alignItems: "center", gap: "8px", background: "rgba(255, 255, 255, 0.95)",
         backdropFilter: "blur(8px)", padding: "8px 16px", borderRadius: "12px",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)", fontFamily: "sans-serif"
       }}>
         <span style={{ fontSize: "12px", fontWeight: "bold", color: "#334155" }}>📹 視点移動:</span>
         <select 
-          value={selectedCamIdx}
           onChange={handleCameraChange}
           style={{
             padding: "4px 8px", fontSize: "12px", fontWeight: "600", borderRadius: "6px",
@@ -944,19 +917,6 @@ export default function App() {
             <option key={idx} value={idx}>{btn.name}</option>
           ))}
         </select>
-
-        {/* 5秒おきの自動切り替え ON/OFF ボタン */}
-        <button
-          onClick={() => setIsAutoSwitch(!isAutoSwitch)}
-          style={{
-            padding: "4px 10px", fontSize: "12px", fontWeight: "bold", borderRadius: "6px",
-            border: "none", cursor: "pointer", transition: "all 0.2s",
-            background: isAutoSwitch ? "#10B981" : "#E2E8F0",
-            color: isAutoSwitch ? "#FFFFFF" : "#475569"
-          }}
-        >
-          {isAutoSwitch ? "🔄 自動切替: ON (5s)" : "▶ 自動切替: OFF"}
-        </button>
       </div>
 
       {/* ステータスパネル */}
@@ -980,7 +940,7 @@ export default function App() {
       }}>
         <div style={{ fontSize: "12px", fontWeight: "bold", color: "#1E293B" }}>📱 入退室管理ページ</div>
         <img 
-          src="https://my-study-room-b9d92.web.app/entry.html" 
+          src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://my-study-room-b9d92.web.app/entry.html" 
           alt="QR" width={100} height={100} style={{ borderRadius: "4px" }}
         />
         <div style={{ fontSize: "9px", color: "#64748B", textAlign: "center" }}>スマホでスキャンして入退室</div>
