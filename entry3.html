@@ -8,62 +8,65 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center p-4 font-sans">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
 
-  <div class="bg-white border border-slate-200 p-6 sm:p-8 w-full max-w-md shadow-lg relative overflow-hidden">
-    
-    <div class="text-center mb-6">
-      <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-50 text-indigo-600 mb-3 text-xl border border-indigo-100">
-        📖
-      </div>
-      <h1 class="text-xl font-bold text-slate-900 tracking-tight">3D自習室 入退室受付</h1>
-      <p class="text-xs text-slate-400 mt-1">学習を開始・休憩・終了する際に操作してください</p>
-    </div>
-
-    <div id="statusCard" class="mb-6 p-4 border transition-all duration-300 bg-slate-50 border-slate-200">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">STATUS</span>
-        <div id="statusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-slate-200 text-slate-600">
+  <!-- 常時表示バー: ステータス + 3ボタン -->
+  <div class="bg-white border-b border-slate-200 shadow-sm z-10 shrink-0">
+    <div class="max-w-md mx-auto p-3 sm:p-4">
+      <div class="flex items-center justify-between mb-2.5">
+        <h1 class="text-sm font-bold text-slate-900 tracking-tight">3D自習室 入退室受付</h1>
+        <div id="statusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-slate-200 text-slate-600 shrink-0">
           <span class="w-2 h-2 rounded-full bg-slate-400"></span>
           <span>未入室</span>
         </div>
       </div>
-      <div id="userInfoDisplay" class="hidden mt-2 pt-2 border-t border-slate-200">
-        <div class="text-base font-extrabold text-slate-800" id="displayName">-</div>
-        <div class="text-xs font-medium text-slate-500 mt-0.5" id="displaySubject">-</div>
+      <div id="userInfoLine" class="hidden text-xs font-medium text-slate-500 mb-2.5 -mt-1">
+        <span id="displayName" class="font-bold text-slate-700">-</span>
+        <span id="displaySubject" class="ml-1.5">-</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        <button id="btnEnter" onClick="handleEnter()" class="flex flex-col items-center justify-center gap-1 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold py-2.5 px-1 text-xs transition">
+          <span class="text-base">▶</span>
+          <span id="btnEnterText">入室する</span>
+        </button>
+        <button id="btnBreak" onClick="handleToggleBreak()" class="flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-2.5 px-1 text-xs cursor-not-allowed" disabled>
+          <span class="text-base">☕</span>
+          <span id="btnBreakText">休憩する</span>
+        </button>
+        <button id="btnLeave" onClick="handleLeave()" class="flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-2.5 px-1 text-xs cursor-not-allowed" disabled>
+          <span class="text-base">⏹</span>
+          <span>退室する</span>
+        </button>
       </div>
     </div>
+  </div>
 
-    <div class="space-y-4 mb-6">
-      <div>
-        <label class="block text-xs font-bold text-slate-600 mb-1.5">ユーザーネーム <span class="text-rose-500">*</span></label>
-        <input id="userName" type="text" placeholder="例: 山田 太郎" class="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-indigo-500 transition">
-      </div>
-      <div>
-        <label class="block text-xs font-bold text-slate-600 mb-1.5">学習教科 / 取り組み内容</label>
-        <input id="userSubject" type="text" placeholder="例: 数学Ⅲ / 英語長文" class="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-indigo-500 transition">
-      </div>
-      <div>
-        <label class="block text-xs font-bold text-slate-600 mb-1.5">座席を選択 (全52席) <span class="text-rose-500">*</span></label>
-        <select id="seatSelect" class="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-indigo-500 transition font-bold">
-        </select>
-      </div>
-    </div>
+  <!-- 入室前: 名前・教科・座席の入力フォーム -->
+  <div id="formView" class="flex-1 flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 p-6 sm:p-8 w-full max-w-md shadow-lg">
+      <p class="text-xs text-slate-400 mb-5 text-center">学習を開始する際は、下の項目を入力してから上の「入室する」を押してください</p>
 
-    <div class="grid grid-cols-3 gap-2">
-      <button id="btnEnter" onClick="handleEnter()" class="flex flex-col items-center justify-center gap-1 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold py-3 px-1 text-xs transition">
-        <span class="text-base">▶</span>
-        <span id="btnEnterText">入室する</span>
-      </button>
-      <button id="btnBreak" onClick="handleToggleBreak()" class="flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-3 px-1 text-xs cursor-not-allowed" disabled>
-        <span class="text-base">☕</span>
-        <span id="btnBreakText">休憩する</span>
-      </button>
-      <button id="btnLeave" onClick="handleLeave()" class="flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-3 px-1 text-xs cursor-not-allowed" disabled>
-        <span class="text-base">⏹</span>
-        <span>退室する</span>
-      </button>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1.5">ユーザーネーム <span class="text-rose-500">*</span></label>
+          <input id="userName" type="text" placeholder="例: 山田 太郎" class="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1.5">学習教科 / 取り組み内容</label>
+          <input id="userSubject" type="text" placeholder="例: 数学Ⅲ / 英語長文" class="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-indigo-500 transition">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1.5">座席を選択 (全66席) <span class="text-rose-500">*</span></label>
+          <select id="seatSelect" class="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-indigo-500 transition font-bold">
+          </select>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- 入室後: 自分のキャラクターをカメラが追従する3Dビュー -->
+  <div id="viewerView" class="hidden flex-1 relative bg-slate-900">
+    <iframe id="roomViewer" class="w-full h-full border-0 block" title="3D自習室ビュー" allow="autoplay"></iframe>
   </div>
 
   <script>
@@ -81,6 +84,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // ↓↓↓ 3Dシミュレーター(StudyRoomApp)を実際にデプロイしているURLに書き換えてください ↓↓↓
+    const STUDY_ROOM_3D_URL = "https://example.com/study-room-3d/";
+
     let userId = localStorage.getItem("study_room_uid");
     if (!userId) {
       userId = "user_" + Date.now();
@@ -91,6 +97,8 @@
     let currentStatus = "LEFT";
     let allUsersData = {};
 
+    // 3D側 (StudyRoomApp.jsx) の座席番号(0〜65)と一致させること:
+    // 0-51 = 8デスク島・丸テーブルの座席, 52-59 = 左壁の個人学習スペース, 60-65 = 右壁の個人学習スペース
     const ISLANDS = [
       { name: "デスク A (左奥)", count: 8 }, { name: "デスク B (中央奥)", count: 8 },
       { name: "デスク C (右奥)", count: 8 }, { name: "デスク D (手前左)", count: 8 },
@@ -101,6 +109,8 @@
     ISLANDS.forEach(island => {
       for (let i = 1; i <= island.count; i++) SEAT_NAMES.push(`${island.name} - ${i}番席`);
     });
+    for (let i = 1; i <= 8; i++) SEAT_NAMES.push(`個人学習スペース (左壁) - ${i}番`);
+    for (let i = 1; i <= 6; i++) SEAT_NAMES.push(`個人学習スペース (右壁) - ${i}番`);
 
     function getTodayStr() {
       const d = new Date();
@@ -163,12 +173,33 @@
       setTimeout(() => { isCooldown = false; updateUI(currentStatus, document.getElementById("userName").value, document.getElementById("userSubject").value); }, 1500);
     }
 
+    // 入室後かどうかで「入力フォーム」⇔「3Dビューア(自分を追従)」を切り替える
+    function updateViewMode(status) {
+      const formView = document.getElementById("formView");
+      const viewerView = document.getElementById("viewerView");
+      const iframe = document.getElementById("roomViewer");
+      const inRoom = ["ENTER_REQUEST", "SEATED", "BREAK", "LEAVE_REQUEST"].includes(status);
+
+      if (inRoom) {
+        formView.classList.add("hidden");
+        viewerView.classList.remove("hidden");
+        const desiredSrc = `${STUDY_ROOM_3D_URL}?follow=${encodeURIComponent(userId)}&embed=1`;
+        if (iframe.getAttribute("src") !== desiredSrc) {
+          iframe.src = desiredSrc;
+        }
+      } else {
+        formView.classList.remove("hidden");
+        viewerView.classList.add("hidden");
+        if (iframe.getAttribute("src")) iframe.removeAttribute("src");
+      }
+    }
+
     function updateUI(status, name, subject) {
       if (isCooldown) return;
+      updateViewMode(status);
 
-      const card = document.getElementById("statusCard");
       const badge = document.getElementById("statusBadge");
-      const userInfoDisplay = document.getElementById("userInfoDisplay");
+      const userInfoLine = document.getElementById("userInfoLine");
       const displayName = document.getElementById("displayName");
       const displaySubject = document.getElementById("displaySubject");
       const btnEnter = document.getElementById("btnEnter");
@@ -178,67 +209,62 @@
       const btnBreakText = document.getElementById("btnBreakText");
 
       if (status === "ENTER_REQUEST") {
-        card.className = "mb-6 p-4 border transition-all duration-300 bg-amber-50 border-amber-200";
-        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-amber-500 text-white animate-pulse";
+        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-amber-500 text-white animate-pulse shrink-0";
         badge.innerHTML = `<span>⏳ 受付・座席移動中...</span>`;
-        userInfoDisplay.classList.remove("hidden");
+        userInfoLine.classList.remove("hidden");
         displayName.innerText = name || "学習者";
         displaySubject.innerText = subject ? `教科: ${subject}` : "教科: 未設定";
         setElementsLock(true, true, true, true);
 
       } else if (status === "SEATED") {
-        card.className = "mb-6 p-4 border transition-all duration-300 bg-emerald-50 border-emerald-200";
-        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-extrabold bg-emerald-500 text-white";
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-white animate-pulse"></span><span>🟢 自習室に入室中</span>`;
-        userInfoDisplay.classList.remove("hidden");
+        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-extrabold bg-emerald-500 text-white shrink-0";
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-white animate-pulse"></span><span>🟢 入室中</span>`;
+        userInfoLine.classList.remove("hidden");
         displayName.innerText = name || "学習者";
         displaySubject.innerText = subject ? `教科: ${subject}` : "教科: 未設定";
         btnEnter.disabled = true;
-        btnEnter.className = "flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-3 px-1 text-xs cursor-not-allowed opacity-60";
+        btnEnter.className = "flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-2.5 px-1 text-xs cursor-not-allowed opacity-60";
         btnEnterText.innerText = "入室中";
         btnBreak.disabled = false;
-        btnBreak.className = "flex flex-col items-center justify-center gap-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold py-3 px-1 text-xs transition";
+        btnBreak.className = "flex flex-col items-center justify-center gap-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold py-2.5 px-1 text-xs transition";
         btnBreakText.innerText = "休憩する";
         btnLeave.disabled = false;
-        btnLeave.className = "flex flex-col items-center justify-center gap-1 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-bold py-3 px-1 text-xs transition";
+        btnLeave.className = "flex flex-col items-center justify-center gap-1 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-bold py-2.5 px-1 text-xs transition";
         setElementsLock(true, false, false, true);
 
       } else if (status === "BREAK") {
-        card.className = "mb-6 p-4 border transition-all duration-300 bg-amber-50 border-amber-300";
-        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-extrabold bg-amber-500 text-white";
+        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-extrabold bg-amber-500 text-white shrink-0";
         badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-white animate-ping"></span><span>🟡 休憩中</span>`;
-        userInfoDisplay.classList.remove("hidden");
+        userInfoLine.classList.remove("hidden");
         displayName.innerText = name || "学習者";
         displaySubject.innerText = "離席・休憩中";
         btnEnter.disabled = true;
-        btnEnter.className = "flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-3 px-1 text-xs cursor-not-allowed opacity-60";
+        btnEnter.className = "flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-2.5 px-1 text-xs cursor-not-allowed opacity-60";
         btnEnterText.innerText = "入室中";
         btnBreak.disabled = false;
-        btnBreak.className = "flex flex-col items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-3 px-1 text-xs transition ring-2 ring-emerald-400";
+        btnBreak.className = "flex flex-col items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-2.5 px-1 text-xs transition ring-2 ring-emerald-400";
         btnBreakText.innerText = "学習再開";
         btnLeave.disabled = false;
-        btnLeave.className = "flex flex-col items-center justify-center gap-1 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-bold py-3 px-1 text-xs transition";
+        btnLeave.className = "flex flex-col items-center justify-center gap-1 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-bold py-2.5 px-1 text-xs transition";
         setElementsLock(true, false, false, true);
 
       } else if (status === "LEAVE_REQUEST") {
-        card.className = "mb-6 p-4 border transition-all duration-300 bg-rose-50 border-rose-200";
-        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-rose-500 text-white animate-pulse";
+        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-rose-500 text-white animate-pulse shrink-0";
         badge.innerHTML = `<span>⏳ 退室中...</span>`;
         setElementsLock(true, true, true, true);
 
       } else {
-        card.className = "mb-6 p-4 border transition-all duration-300 bg-slate-50 border-slate-200";
-        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-slate-200 text-slate-600";
+        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-slate-200 text-slate-600 shrink-0";
         badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span><span>未入室</span>`;
-        userInfoDisplay.classList.add("hidden");
+        userInfoLine.classList.add("hidden");
         btnEnter.disabled = false;
-        btnEnter.className = "flex flex-col items-center justify-center gap-1 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold py-3 px-1 text-xs transition";
+        btnEnter.className = "flex flex-col items-center justify-center gap-1 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold py-2.5 px-1 text-xs transition";
         btnEnterText.innerText = "入室する";
         btnBreak.disabled = true;
-        btnBreak.className = "flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-3 px-1 text-xs cursor-not-allowed opacity-60";
+        btnBreak.className = "flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-2.5 px-1 text-xs cursor-not-allowed opacity-60";
         btnBreakText.innerText = "休憩する";
         btnLeave.disabled = true;
-        btnLeave.className = "flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-3 px-1 text-xs cursor-not-allowed opacity-60";
+        btnLeave.className = "flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-300 border border-slate-200 font-bold py-2.5 px-1 text-xs cursor-not-allowed opacity-60";
         setElementsLock(false, true, true, false);
       }
     }
@@ -270,6 +296,9 @@
       updates[`users/${userId}/seatIndex`] = seatIndex;
       updates[`users/${userId}/updatedAt`] = Date.now();
       updates[`users/${userId}/history/${today}`] = true;
+
+      // 通信切断（タブ閉じ・ネットワーク断）時に自動的に「LEFT（退室）」へ更新するよう予約
+      db.ref(`users/${userId}/status`).onDisconnect().set("LEFT");
 
       db.ref().update(updates);
     }
