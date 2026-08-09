@@ -1706,3 +1706,15 @@ export default function App() {
     </div>
   );
 }
+
+// --- ブラウザで直接実行する場合のマウント処理 (room.html から読み込まれたときに使用) ---
+// Viteなどのビルドツールで別のエントリーファイルから import App する構成に移行する場合、
+// この下のブロックは不要になるので削除して構いません。
+if (typeof document !== "undefined") {
+  const rootEl = document.getElementById("root");
+  if (rootEl) {
+    import("react-dom/client").then(({ createRoot }) => {
+      createRoot(rootEl).render(<App />);
+    });
+  }
+}

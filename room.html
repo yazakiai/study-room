@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D自習室</title>
+<style>
+  html, body, #root { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #EDE6D8; }
+</style>
+
+<!-- ここで「react」「three」などの名前が実際にはどのCDN上のファイルを指すかを定義しています -->
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "three": "https://esm.sh/three@0.160.0",
+    "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.15.0?external=react,react-dom,three",
+    "@react-three/drei": "https://esm.sh/@react-three/drei@9.99.0?external=react,react-dom,three,@react-three/fiber",
+    "firebase/app": "https://esm.sh/firebase@10.8.0/app",
+    "firebase/database": "https://esm.sh/firebase@10.8.0/database"
+  }
+}
+</script>
+
+<!-- studyroom.js の中の JSX (<Canvas> や <mesh> のような書き方) を、
+     ブラウザが理解できる普通のJavaScriptにその場で変換するためのツール -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- studyroom.js を上のBabelで変換しながら実行する -->
+  <script type="text/babel" data-type="module" data-presets="react" src="./studyroom.js"></script>
+</body>
+</html>
