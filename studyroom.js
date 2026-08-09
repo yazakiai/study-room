@@ -939,10 +939,10 @@ export default function App() {
         fontFamily: "sans-serif"
       }}>
         <div style={{ fontSize: "12px", fontWeight: "bold", color: "#1E293B" }}>📱 入退室管理ページ</div>
-        <img 
-          src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://my-study-room-b9d92.web.app/entry.html" 
-          alt="QR" width={100} height={100} style={{ borderRadius: "4px" }}
-        />
+<img 
+  src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://yazakiai.github.io/study-room/entry3" 
+  alt="QR" width={100} height={100} style={{ borderRadius: "4px" }}
+/>
         <div style={{ fontSize: "9px", color: "#64748B", textAlign: "center" }}>スマホでスキャンして入退室</div>
       </div>
 
